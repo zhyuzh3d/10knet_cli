@@ -1,67 +1,79 @@
-import { app, BrowserWindow } from 'electron';
+import electron, { app, BrowserWindow } from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { enableLiveReload } from 'electron-compile';
+const path = require('path');
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
+// 保持主窗口，否则会被自动回收
 let mainWindow;
-
 const isDevMode = process.execPath.match(/[\\/]electron/);
-
 if(isDevMode) enableLiveReload({ strategy: 'react-hmr' });
 
 const createWindow = async() => {
-    // Create the browser window.
+    // 打开主窗口，载入桥接脚本
+    const workArea = electron.screen.getPrimaryDisplay().workArea;
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        x: workArea.x + workArea.width - 400,
+        y: workArea.y,
+        center: false,
+        width: 400,
+        height: workArea.height,
+        webPreferences: {
+            nodeIntegration: false,
+            preload: path.join(__dirname, 'preload.js'),
+        },
     });
 
-    // and load the index.html of the app.
-    // mainWindow.loadURL(`file://${__dirname}/index.html`);
+    //支持渲染进程ipc调用main process主进程命令
+    const ipcMain = require('electron').ipcMain;
+    ipcMain.on('run', function(event, cmd) {
+        try {
+            eval(cmd);
+            event.returnValue = true;
+        } catch(err) {
+            event.returnValue = err.message;
+        }
+    });
 
-    // Open the DevTools.
+
+    // 载入页面，测试端口为本地3000
+    // mainWindow.loadURL(`file://${__dirname}/index.html`);
+    var host = `http://localhost:3000`;
+
+    // 打开开发工具
     if(isDevMode) {
-        mainWindow.loadURL(`http://localhost:3000/`);
+        mainWindow.loadURL(host);
         await installExtension(REACT_DEVELOPER_TOOLS);
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadURL(`http://localhost:3000/`);
+        xmainWindow.loadURL(host);
         await installExtension(REACT_DEVELOPER_TOOLS);
         mainWindow.webContents.openDevTools();
-        //mainWindow.loadURL(`http://cli.10knet.com/`);
     }
 
-    // Emitted when the window is closed.
+    // 窗口被关闭时候运行
     mainWindow.on('closed', () => {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
+        // 如果有多个窗口都应关闭
         mainWindow = null;
     });
 };
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+// 应用就绪后运行
 app.on('ready', createWindow);
 
-// Quit when all windows are closed.
+// 当所有窗口关闭时退出
 app.on('window-all-closed', () => {
-    // On OS X it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
+    // OS X中Cmd + Q执行的时候
     if(process.platform !== 'darwin') {
         app.quit();
     }
 });
 
 app.on('activate', () => {
-    // On OS X it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
+    // 在OSX中点击docker图标的时候弹出
     if(mainWindow === null) {
         createWindow();
-    }
+    };
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+
+//
