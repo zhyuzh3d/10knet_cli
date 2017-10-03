@@ -9,6 +9,8 @@ const isDevMode = process.execPath.match(/[\\/]electron/);
 if(isDevMode) enableLiveReload({ strategy: 'react-hmr' });
 var host = isDevMode ? 'http://localhost:3000' : 'https://10knet.com';
 
+global.aa = 999;
+
 // 打开主窗口，载入桥接脚本
 const initMain = async() => {
     const workArea = electron.screen.getPrimaryDisplay().workArea;
@@ -23,11 +25,9 @@ const initMain = async() => {
         //frame:false,
         webPreferences: {
             nodeIntegration: true,
-            //preload: host + '/cliPreload/mainPreload.js',
             preload: path.join(__dirname, 'preload/mainPreload.js'),
         },
     });
-    console.log('>>>>', host + '/cliPreload/mainPreload.js');
 
     //支持渲染进程ipc调用main process主进程命令
     const ipcMain = require('electron').ipcMain;
