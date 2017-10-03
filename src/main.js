@@ -7,12 +7,13 @@ const path = require('path');
 let mainWindow, slaveWindow;
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if(isDevMode) enableLiveReload({ strategy: 'react-hmr' });
+var host = isDevMode ? 'http://localhost:3000' : 'https://10knet.com';
 
 // 打开主窗口，载入桥接脚本
 const initMain = async() => {
     const workArea = electron.screen.getPrimaryDisplay().workArea;
     mainWindow = new BrowserWindow({
-        title:'10knet-main',
+        title: '10knet-main',
         x: workArea.x + workArea.width - 400,
         y: workArea.y,
         center: false,
@@ -22,9 +23,11 @@ const initMain = async() => {
         //frame:false,
         webPreferences: {
             nodeIntegration: true,
-            preload: path.join(__dirname, 'preload.js'),
+            //preload: host + '/cliPreload/mainPreload.js',
+            preload: path.join(__dirname, 'preload/mainPreload.js'),
         },
     });
+    console.log('>>>>', host + '/cliPreload/mainPreload.js');
 
     //支持渲染进程ipc调用main process主进程命令
     const ipcMain = require('electron').ipcMain;
@@ -38,16 +41,13 @@ const initMain = async() => {
     });
 
     // 载入页面，测试端口为本地3000
-    var devHost = `http://localhost:3000?pageName=MainHomePage`;
-    var proHost = `https://10knet.com?pageName=MainHomePage`;
+    var home = host + '?pageName=MainHomePage';
+    mainWindow.loadURL(home);
 
     // 打开开发工具
     if(isDevMode) {
-        mainWindow.loadURL(devHost);
         await installExtension(REACT_DEVELOPER_TOOLS);
         mainWindow.webContents.openDevTools();
-    } else {
-        mainWindow.loadURL(proHost);
     };
 
     // 窗口被关闭时候运行
@@ -59,18 +59,20 @@ const initMain = async() => {
 
 //从窗口默认不显示，预先载入页面内容；但同样支持ipc命令
 const initSlave = async() => {
+
     const workArea = electron.screen.getPrimaryDisplay().workArea;
     slaveWindow = new BrowserWindow({
-        title:'10knet-slave',
+        title: '10knet-slave',
         x: 0,
         y: 0,
         center: false,
-        width: workArea.width-400,
+        width: workArea.width - 400,
         height: workArea.height,
         //frame:false,
         webPreferences: {
             nodeIntegration: true,
-            preload: path.join(__dirname, 'preload.js'),
+            //preload: host + '/cliPreload/slavePreload.js',
+            preload: path.join(__dirname, 'preload/slavePreload.js'),
         },
     });
     slaveWindow.hide();
@@ -87,16 +89,13 @@ const initSlave = async() => {
     });
 
     //载入页面，测试端口为本地3000
-    var devHost = `http://localhost:3000?pageName=SlaveHomePage`;
-    var proHost = `https://10knet.com?pageName=SlaveHomePage`;
+    var home = host + '?pageName=SlaveHomePage';
+    slaveWindow.loadURL(home);
 
     // 打开开发工具
     if(isDevMode) {
-        slaveWindow.loadURL(devHost);
         await installExtension(REACT_DEVELOPER_TOOLS);
         slaveWindow.webContents.openDevTools();
-    } else {
-        slaveWindow.loadURL(proHost);
     };
 
     // 窗口被关闭时候运行
