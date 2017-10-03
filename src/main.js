@@ -19,7 +19,7 @@ const initMain = async() => {
         width: 400,
         height: workArea.height,
         alwaysOnTop: true,
-        frame:false,
+        //frame:false,
         webPreferences: {
             nodeIntegration: true,
             preload: path.join(__dirname, 'preload.js'),
@@ -67,7 +67,7 @@ const initSlave = async() => {
         center: false,
         width: workArea.width-400,
         height: workArea.height,
-        frame:false,
+        //frame:false,
         webPreferences: {
             nodeIntegration: true,
             preload: path.join(__dirname, 'preload.js'),
