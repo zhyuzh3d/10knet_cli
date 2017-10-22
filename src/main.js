@@ -7,7 +7,7 @@ const path = require('path');
 let mainWindow, slaveWindow;
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if(isDevMode) enableLiveReload({ strategy: 'react-hmr' });
-var host = isDevMode ? 'http://localhost:3000' : 'https://10knet.com';
+var host = isDevMode ? 'http://localhost:3000' : 'https://cli.10knet.com';
 
 global.aa = 999;
 
