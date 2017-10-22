@@ -11,6 +11,7 @@ var host = isDevMode ? 'http://localhost:3000' : 'https://cli.10knet.com';
 
 global.aa = 999;
 
+
 // 打开主窗口，载入桥接脚本
 const initMain = async() => {
     const workArea = electron.screen.getPrimaryDisplay().workArea;
