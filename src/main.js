@@ -22,7 +22,7 @@ const initMain = async() => {
         center: false,
         width: 400,
         height: workArea.height,
-        alwaysOnTop: true,
+        //alwaysOnTop: true,
         //frame:false,
         webPreferences: {
             nodeIntegration: true,
@@ -30,16 +30,6 @@ const initMain = async() => {
         },
     });
 
-    //支持渲染进程ipc调用main process主进程命令
-    const ipcMain = require('electron').ipcMain;
-    ipcMain.on('run', function(event, cmd) {
-        try {
-            eval(cmd);
-            event.returnValue = true;
-        } catch(err) {
-            event.returnValue = err.message;
-        }
-    });
 
     // 载入页面，测试端口为本地3000
     var home = host + '?pageName=MainHomePage';
@@ -78,17 +68,6 @@ const initSlave = async() => {
     });
     slaveWindow.hide();
 
-    //支持渲染进程ipc调用main process主进程命令
-    const ipcMain = require('electron').ipcMain;
-    ipcMain.on('run', function(event, cmd) {
-        try {
-            eval(cmd);
-            event.returnValue = true;
-        } catch(err) {
-            event.returnValue = err.message;
-        }
-    });
-
     //载入页面，测试端口为本地3000
     var home = host + '?pageName=SlaveHomePage';
     slaveWindow.loadURL(home);
@@ -105,6 +84,30 @@ const initSlave = async() => {
         slaveWindow = null;
     });
 };
+
+//支持渲染进程ipc调用main process主进程命令
+const ipcMain = electron.ipcMain;
+ipcMain.on('run', function(event, cmd) {
+    try {
+        eval(cmd);
+        event.returnValue = true;
+    } catch(err) {
+        event.returnValue = err.message;
+    }
+});
+
+//支持main和slave两个窗口之间通信
+ipcMain.on('send', function(event, arg) {
+    arg.from = event;
+    arg.ts = new Date().getTime();
+    if(arg.target == 'main') {
+        mainWindow.webContents.send('msg', arg);
+        event.returnValue = true;
+    } else if(arg.target == 'slave') {
+        slaveWindow.webContents.send('msg', arg);
+        event.returnValue = true;
+    };
+});
 
 
 // 应用就绪后运行
