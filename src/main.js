@@ -17,11 +17,13 @@ const initMain = async() => {
     const workArea = electron.screen.getPrimaryDisplay().workArea;
     mainWindow = new BrowserWindow({
         title: '10knet-main',
-        x: workArea.x + workArea.width - 400,
+        x: workArea.x + workArea.width - 360,
         y: workArea.y,
         center: false,
-        width: 400,
+        width: 360,
+        minWidth: 360,
         height: workArea.height,
+        //minHeight: 640,
         //alwaysOnTop: true,
         //frame:false,
         webPreferences: {
@@ -113,7 +115,7 @@ ipcMain.on('send', function(event, arg) {
 // 应用就绪后运行
 app.on('ready', () => {
     initMain();
-    initSlave();
+    //initSlave();
 });
 
 // 当所有窗口关闭时退出
@@ -129,9 +131,9 @@ app.on('activate', () => {
     if(mainWindow === null) {
         initMain();
     };
-    if(slaveWindow === null) {
+    /*if(slaveWindow === null) {
         initSlave();
-    };
+    };*/
 });
 
 
