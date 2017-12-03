@@ -1,16 +1,19 @@
 import electron, { app, BrowserWindow } from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { enableLiveReload } from 'electron-compile';
+var EventEmitter = require('events').EventEmitter;
 const path = require('path');
 
+//增加监听器上限
+var ee = new EventEmitter();
+ee.setMaxListeners(100);
+
 // 保持主窗口，否则会被自动回收
-let mainWindow, slaveWindow;
+let mainWindow;
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if(isDevMode) enableLiveReload({ strategy: 'react-hmr' });
-var host = isDevMode ? 'http://localhost:3000' : 'https://cli.10knet.com';
-
-global.aa = 999;
-
+//var host = isDevMode ? 'http://localhost:3000' : 'http://cli.10knet.com';
+var host = 'http://localhost:3000';
 
 // 打开主窗口，载入桥接脚本
 const initMain = async() => {
@@ -38,10 +41,10 @@ const initMain = async() => {
     mainWindow.loadURL(home);
 
     // 打开开发工具
-    if(isDevMode) {
-        await installExtension(REACT_DEVELOPER_TOOLS);
-        mainWindow.webContents.openDevTools();
-    };
+    //if(isDevMode) {
+    await installExtension(REACT_DEVELOPER_TOOLS);
+    mainWindow.webContents.openDevTools();
+    //};
 
     // 窗口被关闭时候运行
     mainWindow.on('closed', () => {
@@ -50,42 +53,6 @@ const initMain = async() => {
     });
 };
 
-//从窗口默认不显示，预先载入页面内容；但同样支持ipc命令
-const initSlave = async() => {
-
-    const workArea = electron.screen.getPrimaryDisplay().workArea;
-    slaveWindow = new BrowserWindow({
-        title: '10knet-slave',
-        x: 0,
-        y: 0,
-        center: false,
-        width: workArea.width - 400,
-        height: workArea.height,
-        //frame:false,
-        webPreferences: {
-            nodeIntegration: true,
-            //preload: host + '/cliPreload/slavePreload.js',
-            preload: path.join(__dirname, 'preload/slavePreload.js'),
-        },
-    });
-    slaveWindow.hide();
-
-    //载入页面，测试端口为本地3000
-    var home = host + '?pageName=SlaveHomePage';
-    slaveWindow.loadURL(home);
-
-    // 打开开发工具
-    if(isDevMode) {
-        await installExtension(REACT_DEVELOPER_TOOLS);
-        slaveWindow.webContents.openDevTools();
-    };
-
-    // 窗口被关闭时候运行
-    slaveWindow.on('closed', () => {
-        // 如果有多个窗口都应关闭
-        slaveWindow = null;
-    });
-};
 
 //支持渲染进程ipc调用main process主进程命令
 const ipcMain = electron.ipcMain;
@@ -98,24 +65,18 @@ ipcMain.on('run', function(event, cmd) {
     }
 });
 
-//支持main和slave两个窗口之间通信
+//支持窗口之间通信
 ipcMain.on('send', function(event, arg) {
     arg.from = event;
     arg.ts = new Date().getTime();
-    if(arg.target == 'main') {
-        mainWindow.webContents.send('msg', arg);
-        event.returnValue = true;
-    } else if(arg.target == 'slave') {
-        slaveWindow.webContents.send('msg', arg);
-        event.returnValue = true;
-    };
+    mainWindow.webContents.send('msg', arg);
+    event.returnValue = true;
 });
 
 
 // 应用就绪后运行
 app.on('ready', () => {
     initMain();
-    //initSlave();
 });
 
 // 当所有窗口关闭时退出
@@ -131,9 +92,6 @@ app.on('activate', () => {
     if(mainWindow === null) {
         initMain();
     };
-    /*if(slaveWindow === null) {
-        initSlave();
-    };*/
 });
 
 
