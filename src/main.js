@@ -23,7 +23,7 @@ const initMain = async() => {
         x: workArea.x + workArea.width - 360,
         y: workArea.y,
         center: false,
-        width: 360,
+        width: workArea.width,
         minWidth: 360,
         height: workArea.height,
         //minHeight: 640,
