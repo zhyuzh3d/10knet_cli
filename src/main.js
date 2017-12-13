@@ -12,8 +12,8 @@ ee.setMaxListeners(100);
 let mainWindow;
 const isDevMode = process.execPath.match(/[\\/]electron/);
 if(isDevMode) enableLiveReload({ strategy: 'react-hmr' });
-//var host = isDevMode ? 'http://localhost:3000' : 'http://cli.10knet.com';
-var host = 'http://localhost:3000';
+var host = isDevMode ? 'http://localhost:3000' : 'http://cli.10knet.com';
+//var host = 'http://localhost:3000';
 
 // 打开主窗口，载入桥接脚本
 const initMain = async() => {
@@ -26,7 +26,8 @@ const initMain = async() => {
         width: workArea.width,
         minWidth: 360,
         height: workArea.height,
-        //minHeight: 640,
+        minHeight: 480,
+        minWidth:720,
         //alwaysOnTop: true,
         //frame:false,
         webPreferences: {
